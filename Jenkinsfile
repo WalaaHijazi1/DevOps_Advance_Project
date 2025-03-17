@@ -32,29 +32,25 @@ pipeline {
             }
         }
 
-        stage('Clone or Update Tests from GitHub') {
-            steps {
-                sh '''
-                # Check if the /tests_repo directory exists
-                if [ -d "/tests_repo" ]; then
-                    echo "Directory /tests_repo already exists. Removing and cloning the repository."
-                    # If the directory exists, remove it and then clone the repository
-                    docker exec chromedriver-container rm -rf /tests_repo
-                fi
+	stage('Clone or Update Tests from GitHub') {
+    	    steps {
+        	sh '''
+        	# Check if the /tests_repo directory exists inside the container
+        	docker exec chromedriver-container bash -c "if [ -d /tests_repo ]; then echo 'Directory exists. Removing and cloning the repository.'; rm -rf /tests_repo; fi"
+        
+        	# Cloning the repository
+        	docker exec chromedriver-container git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
 
-                echo "Cloning the repository."
-                docker exec chromedriver-container git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
+        	# Remove any existing test files in /tests to ensure overwriting
+        	docker exec chromedriver-container rm -f /tests/frontend_testing.py
+        	docker exec chromedriver-container rm -f /tests/combined_testing.py
 
-                # Remove any existing test files in /tests to ensure overwriting
-                docker exec chromedriver-container rm -f /tests/frontend_testing.py
-                docker exec chromedriver-container rm -f /tests/combined_testing.py
-
-                # Copy the new test files into the /tests directory
-                docker exec chromedriver-container cp /tests_repo/frontend_testing.py /tests/
-                docker exec chromedriver-container cp /tests_repo/combined_testing.py /tests/
-                '''
-            }
-        }
+        	# Copy the new test files into the /tests directory
+        	docker exec chromedriver-container cp /tests_repo/frontend_testing.py /tests/
+       		docker exec chromedriver-container cp /tests_repo/combined_testing.py /tests/
+       		 '''
+   		 }
+	}
 
         stage('Install Dependencies') {
             steps {
