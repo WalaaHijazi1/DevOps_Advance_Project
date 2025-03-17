@@ -88,17 +88,18 @@ pipeline {
             }
         }
 
+        stage('Run combined_testing.py') {
+            steps {
+                sh 'docker exec chromedriver-container python3 /tests/combined_testing.py'
+            }
+        }
+
         stage('Run frontend_testing.py') {
             steps {
                 sh 'docker exec chromedriver-container python3 /tests/frontend_testing.py'
             }
         }
 
-        stage('Run combined_testing.py') {
-            steps {
-                sh 'docker exec chromedriver-container python3 /tests/combined_testing.py'
-            }
-        }
     }
 }
 
