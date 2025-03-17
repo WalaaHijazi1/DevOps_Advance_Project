@@ -37,14 +37,13 @@ pipeline {
                 sh '''
                 # Check if the /tests_repo directory exists
                 if [ -d "/tests_repo" ]; then
-                    echo "Directory /tests_repo already exists. Pulling the latest changes."
-                    # If the directory exists, pull the latest changes
-                    docker exec chromedriver-container git -C /tests_repo pull
-                else
-                    echo "Directory /tests_repo does not exist. Cloning the repository."
-                    # If the directory doesn't exist, clone the repository
-                    docker exec chromedriver-container git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
+                    echo "Directory /tests_repo already exists. Removing and cloning the repository."
+                    # If the directory exists, remove it and then clone the repository
+                    docker exec chromedriver-container rm -rf /tests_repo
                 fi
+
+                echo "Cloning the repository."
+                docker exec chromedriver-container git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
 
                 # Remove any existing test files in /tests to ensure overwriting
                 docker exec chromedriver-container rm -f /tests/frontend_testing.py
