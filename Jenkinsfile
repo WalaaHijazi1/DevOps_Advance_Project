@@ -67,7 +67,7 @@ pipeline {
             	sh '''
             	docker exec -d chromedriver-container bash -c 
             	source .myenv/bin/activate &&
-            	nohup python3 /tests_repo/rest_app.py > /tests_repo/rest_app.log 2>&1 &
+            	nohup python3 rest_app.py &
             '''
        		 }
    	 }
