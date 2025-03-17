@@ -15,7 +15,7 @@ pipeline{
                 script {
                     // Pull the Docker image from the private registry
                     sh 'docker login -u $DOCKER_CREDENTIALS_USR -p $DOCKER_CREDENTIALS_PSW private-registry-url'
-                    sh 'docker pull walaahij/chromedriver:latest'
+                    sh 'docker pull docker.io/walaahij/chromedriver:latest'
                 }
             }
         }
@@ -23,15 +23,7 @@ pipeline{
             steps {
                 script {
                     // Run the ChromeDriver container and bind its port to 127.0.0.1:5000
-                    sh 'docker run -d -p 127.0.0.1:5000:5000 walaahij/chromedriver:latest'
-                }
-            }
-        }
-        stage('Run Tests') {
-            steps {
-                script {
-                    // Run tests inside the ChromeDriver Docker container
-                    sh 'docker run --rm private-registry-url/chromedriver:latest your-test-command'
+                    sh 'docker run -d -p 0.0.0.0:5000:5000 walaahij/chromedriver:latest'
                 }
             }
         }
