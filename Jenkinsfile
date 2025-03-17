@@ -23,15 +23,15 @@ pipeline {
             }
         }
 
-        stage('Run ChromeDriver Container') {
-            steps {
-                script {
+        //stage('Run ChromeDriver Container') {
+           // steps {
+                //script {
                     // Run the ChromeDriver container and bind its port to 127.0.0.1:5000
                     // sh 'docker run -d -p 0.0.0.0:5000:5000 walaahij/chromedriver:latest'
-		    sh 'docker run -d -p 127.0.0.1:5000:5000 walaahij/chromedriver:latest'
-                }
-            }
-        }
+	//	    sh 'docker run -d -p 127.0.0.1:5000:5000 walaahij/chromedriver:latest'
+              //  }
+           // }
+        //}
 
 	stage('Clone or Update Tests from GitHub') {
     	    steps {
