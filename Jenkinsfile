@@ -27,6 +27,30 @@ pipeline{
                 }
             }
         }
+	stage('Clone Tests from GitHub') {
+            steps {
+                sh '''
+                # Clone the latest repo inside the container
+                docker exec chromedriver-container git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
+
+                # Remove any old test files to avoid overwriting issues
+                docker exec chromedriver-container rm -f /tests/frontend_testing.py
+                docker exec chromedriver-container rm -f /tests/combined_testing.py
+
+                # Copy the new test files into the container's /tests directory
+                docker exec chromedriver-container cp /tests_repo/frontend_testing.py /tests/
+                docker exec chromedriver-container cp /tests_repo/combined_testing.py /tests/
+                '''
+            }
+        }
+	stage('Install Dependencies') {
+            steps {
+                sh '''
+                # Install requirements inside the container from the cloned repo
+                docker exec chromedriver-container pip install --no-cache-dir --upgrade -r /tests_repo/requirements.txt
+                '''
+            }
+        }
           stage('Run rest_app.py') {
     	     steps {
         	sh '''
