@@ -14,7 +14,7 @@ pipeline{
             steps {
                 script {
                     // Pull the Docker image from the private registry
-                    sh '    echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin'
+                    sh 'echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin'
                     sh 'docker pull docker.io/walaahij/chromedriver:latest'
                 }
             }
@@ -53,18 +53,12 @@ pipeline{
         }
         stage('Run frontend_testing.py'){
             steps{
-		 sh '''
-                   docker run --rm -v $(pwd):/tests walaahij/chromedriver:latest \
-                   python3 frontend_testing.py
-                    '''
+		 sh 'docker exec chromedriver-container python3 /tests/frontend_testing.py'
            }
         }
         stage('Run combined_testing.py'){
             steps{
-		 sh '''
-                   docker run --rm -v $(pwd):/tests walaahij/chromedriver:latest \
-                   python3 combined_testing.py
-                    '''
+		 sh 'docker exec chromedriver-container python3 /tests/combined_testing.py'
            }
         }
 }
