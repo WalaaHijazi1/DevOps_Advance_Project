@@ -34,30 +34,32 @@ pipeline {
 	}
 
 	stage('Run ChromeDriver Container') {
-            steps {
-       		 script {
-            		try {
-                	// Check if port 5000 is already in use
-                	def portInUse = sh(script: "sudo lsof -i :5000", returnStatus: true)
-                	if (portInUse == 0) {
-                    		error "Port 5000 is already in use. Please ensure no other service is using this port."
-              		  }	
+    		steps {
+        			script {
+            				try {
+               			// Check if port 5000 is already in use
+               		 def portInUse = sh(script: "sudo lsof -i :5000", returnStatus: true)
+               		 if (portInUse == 0) {
+                    			echo "Port 5000 is in use. Stopping the existing service..."
+                    		// Stop the container occupying the port
+                    		sh 'sudo docker stop $(sudo lsof -t -i :5000)'
+                		}
 
-             		   // Run the ChromeDriver container
-                	echo "Running the ChromeDriver container..."
-                	sh 'docker run -d -p 127.0.0.1:5000:5000 --name chromedriver-container walaahij/chromedriver:latest'
+               		 // Run the ChromeDriver container
+                		echo "Running the ChromeDriver container..."
+               		 sh 'docker run -d -p 127.0.0.1:5000:5000 --name chromedriver-container walaahij/chromedriver:latest'
 
-                	// Verify if the container is running
-                	sh 'docker ps -a'
+                		// Verify if the container is running
+                		sh 'docker ps -a'
 
-                	// Optional: Show logs of the container for debugging
-                	sh 'docker logs $(docker ps -q --filter "name=chromedriver-container")'
-            		} catch (Exception e) {
-              		 error "Failed to run the ChromeDriver container: ${e.getMessage()}"
-            			}
-			 }
-  		 }
-	}
+                		// Optional: Show logs of the container for debugging
+                		sh 'docker logs $(docker ps -q --filter "name=chromedriver-container")'
+            			} catch (Exception e) {
+               		 error "Failed to run the ChromeDriver container: ${e.getMessage()}"
+            				}
+       			       }
+    			}
+		}
        // stage('Pull ChromeDriver Image') {
            // steps {
               //  script {
