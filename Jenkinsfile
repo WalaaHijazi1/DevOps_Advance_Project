@@ -65,7 +65,8 @@ pipeline {
             steps {
                 sh '''
                 . .myenv/bin/activate
-                nohup python3 rest_app.py &
+                nohup python3 rest_app.py > rest_app.log 2>&1 &
+		#nohup python3 rest_app.py &
                 '''
             }
         }
