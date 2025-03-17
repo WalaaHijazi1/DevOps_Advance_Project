@@ -7,15 +7,15 @@ pipeline{
                 git credentialsId: 'github-pat', url: 'https://github.com/WalaaHijazi1/DevOps_Advance_Project.git', branch: 'main'
             }
         }
-	stage('Run rest_app.py'){
-	    steps{
-		sh'''
-	        . .myenv/bin/activate
-                python3 rest_app.py
-		'''
-           }
+          stage('Run rest_app.py') {
+    	     steps {
+        	sh '''
+        . .myenv/bin/activate
+        nohup python3 rest_app.py &
+        '''
+    		}
 	}
-        stage('Run Web_app.py'){
+	stage('Run Web_app.py'){
             steps{
                 sh'''
                 . .myenv/bin/activate
