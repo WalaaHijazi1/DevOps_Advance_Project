@@ -1,16 +1,19 @@
-pipeline{
-	agent any
-   environment {
-        DOCKER_CREDENTIALS = credentials('docker-username') 
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_CREDENTIALS = credentials('docker-username')
     }
-   stages{
-	 stage('Clone Repository') {
+
+    stages {
+        stage('Clone Repository') {
             steps {
-		// github-pat: is the ID of my github Credentials in Jenkins.
+                // github-pat: is the ID of my github Credentials in Jenkins.
                 git credentialsId: 'github-pat', url: 'https://github.com/WalaaHijazi1/DevOps_Advance_Project.git', branch: 'main'
             }
         }
-	 stage('Pull ChromeDriver Image') {
+
+        stage('Pull ChromeDriver Image') {
             steps {
                 script {
                     // Pull the Docker image from the private registry
@@ -19,7 +22,8 @@ pipeline{
                 }
             }
         }
-	stage('Run ChromeDriver Container') {
+
+        stage('Run ChromeDriver Container') {
             steps {
                 script {
                     // Run the ChromeDriver container and bind its port to 127.0.0.1:5000
@@ -27,31 +31,33 @@ pipeline{
                 }
             }
         }
-	stage('Clone or Update Tests from GitHub') {
-    	    steps {
-        	sh '''
-        	# Check if the /tests_repo directory exists
-        	if [ -d "/tests_repo" ]; then
-            		echo "Directory /tests_repo already exists. Pulling the latest changes."
-            		# If the directory exists, pull the latest changes
-            		docker exec chromedriver-container git -C /tests_repo pull
-        	else
-            		echo "Directory /tests_repo does not exist. Cloning the repository."
-            		# If the directory doesn't exist, clone the repository
-            		docker exec chromedriver-container git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
-        	fi
 
-        	# Remove any existing test files in /tests to ensure overwriting
-        	docker exec chromedriver-container rm -f /tests/frontend_testing.py
-        	docker exec chromedriver-container rm -f /tests/combined_testing.py
+        stage('Clone or Update Tests from GitHub') {
+            steps {
+                sh '''
+                # Check if the /tests_repo directory exists
+                if [ -d "/tests_repo" ]; then
+                    echo "Directory /tests_repo already exists. Pulling the latest changes."
+                    # If the directory exists, pull the latest changes
+                    docker exec chromedriver-container git -C /tests_repo pull
+                else
+                    echo "Directory /tests_repo does not exist. Cloning the repository."
+                    # If the directory doesn't exist, clone the repository
+                    docker exec chromedriver-container git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
+                fi
 
-        	# Copy the new test files into the /tests directory
-        	docker exec chromedriver-container cp /tests_repo/frontend_testing.py /tests/
-        	docker exec chromedriver-container cp /tests_repo/combined_testing.py /tests/
-        	'''
-    		}
-	}	
-	stage('Install Dependencies') {
+                # Remove any existing test files in /tests to ensure overwriting
+                docker exec chromedriver-container rm -f /tests/frontend_testing.py
+                docker exec chromedriver-container rm -f /tests/combined_testing.py
+
+                # Copy the new test files into the /tests directory
+                docker exec chromedriver-container cp /tests_repo/frontend_testing.py /tests/
+                docker exec chromedriver-container cp /tests_repo/combined_testing.py /tests/
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
             steps {
                 sh '''
                 # Install requirements inside the container from the cloned repo
@@ -59,39 +65,57 @@ pipeline{
                 '''
             }
         }
-          stage('Run rest_app.py') {
-    	     steps {
-        	sh '''
-        . .myenv/bin/activate
-        nohup python3 rest_app.py &
-        '''
-    		}
-	}
-	stage('Run Web_app.py'){
-            steps{
-                sh'''
+
+        stage('Run rest_app.py') {
+            steps {
+                sh '''
+                . .myenv/bin/activate
+                nohup python3 rest_app.py &
+                '''
+            }
+        }
+
+        stage('Run Web_app.py') {
+            steps {
+                sh '''
                 . .myenv/bin/activate
                 nohup python3 web_app.py &
                 '''
-           }
+            }
         }
-        stage('Run backend_testing.py'){
-            steps{
-                sh'''
+
+        stage('Run backend_testing.py') {
+            steps {
+                sh '''
                 . .myenv/bin/activate
                 python3 backend_testing.py
                 '''
-           }
+            }
         }
-        stage('Run frontend_testing.py'){
-            steps{
-		 sh 'docker exec chromedriver-container python3 /tests/frontend_testing.py'
-           }
+
+        stage('Run frontend_testing.py') {
+            steps {
+                sh 'docker exec chromedriver-container python3 /tests/frontend_testing.py'
+            }
         }
-        stage('Run combined_testing.py'){
-            steps{
-		 sh 'docker exec chromedriver-container python3 /tests/combined_testing.py'
-           }
+
+        stage('Run combined_testing.py') {
+            steps {
+                sh 'docker exec chromedriver-container python3 /tests/combined_testing.py'
+            }
         }
+
+        // Stage for committing and pushing any changes made in the repository
+        stage('Commit and Push Changes') {
+            steps {
+                script {
+                    // Check for uncommitted changes and commit them
+                    sh 'git add .'
+                    sh 'git commit -m "Automated commit from Jenkins pipeline" || echo "No changes to commit"'
+                    sh 'git push origin main'
+                }
+            }
+        }
+    }
 }
-}
+
