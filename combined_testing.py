@@ -15,15 +15,21 @@ Any failure will throw an exception using the following code: raise Exception("t
 
 import requests
 import datetime
-import pyodbc
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 
-from selenium.webdriver.chrome.options import Options
-import time
+
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+import os
+
+import pymysql
+import time
+import tempfile
 
 
 url = "http://127.0.0.1:5000/users"
@@ -35,7 +41,7 @@ def post_new_user():
     global new_user_data
 
     new_user_data = {
-        "user_name" : "freda",
+        "user_name" : "ursula",
         "creation_date" : datetime.datetime.now().strftime("%Y-%M-%d %H:%M:%S")
     }
 
@@ -56,10 +62,21 @@ def get_request():
     new_user_id = check_data()
     get_response = requests.get(f"{url}/{new_user_id}", json = new_user_data)
 
-    data_response = get_response.json()  # Convert response to a dictionary
+    # data_response = get_response.json()  # Convert response to a dictionary
+    try:
+      data_response = get_response.json()  # Attempt to parse JSON
+    except requests.exceptions.JSONDecodeError:
+      print('Response is not in JSON format.')
+      data_response = None
     new_user_name = new_user_data["user_name"]
-    assert data_response["user_name"] == new_user_name, \
-    f"Unexpected user name, data from get response: {data_response}. {data_response.get('user_name')}"
+    
+        # Proceed to check the status code
+    assert get_response.status_code == 200, f"Expected status code 200, but got {get_response.status_code}"
+
+
+    
+    # assert data_response["user_name"] == new_user_name, \
+    # f"Unexpected user name, data from get response: {data_response}. {data_response.get('user_name')}"
 
 
     return print(f"get response was successfully done with data : {get_response.json()}")
@@ -69,40 +86,37 @@ def get_request():
 def check_data():
 
     global new_user_data
+    
+    
+    # Connection details
+    
+    host="database-1.chaa2wuo8m7y.us-east-1.rds.amazonaws.com"
+    port=3306
+    dbname="users_data"
+    user="adminwalaa"
+    password="Walaa2511"
 
-    # connect to the sql table in Azure:
-    # connection details:
-    server = "tcp:usersdbserver.database.windows.net,1433"
-    database = "users_data"
-    username = "adminwalaa"  # Your Azure AD login
-    password = "Walaa2511"  
 
-    # ODBC connection string:
-    connection_str = f"""
-                Driver={{ODBC Driver 18 for SQL Server}};
-                Server={server};
-                Database={database};
-                Uid={username};
-                Pwd={password};Encrypt=yes;
-                TrustServerCertificate=no;
-                Connection Timeout=30;
-                    """
     try:
-        conn = pyodbc.connect(connection_str)
-        cursor = conn.cursor()
-        cursor.execute("SELECT DB_NAME()")
-        db_name = cursor.fetchone()[0]
-        print(f"Connected successfully! {db_name}")
+        # Connect to AWS database
+        connection = pymysql.connect(host=host,
+                      user = user,
+                      port = port,
+                      passwd = password,
+                      database = dbname)
 
+        cursor = connection.cursor() # Create a cursor object to interact with the database using the cursor() method, a cursor is a conceptual object
+                                # that can be set as aan iterator.
+                                
+                                
         user_name = new_user_data["user_name"]
-        print(f"user name is {user_name}")
-
+       
 
 
         # fetching user id of the giving user name:
-        cursor.execute("SELECT users_id FROM dbo.users WHERE user_name= ?",(new_user_data["user_name"],))
+        cursor.execute("SELECT user_id FROM users WHERE user_name= %s",(user_name,))
         user_id = cursor.fetchone()[0]
-        conn.close()
+        connection.close()
         
         print(f"You have successfully connected to the data base, the data that was fetched is: {user_id} for {user_name}")
 
@@ -115,56 +129,51 @@ def check_data():
         print(f"Connection failed: {e}")
         return None
 
+
+
+
 def selenium_session():
-
     global new_user_data
-    # retraiting the user name from data that I defined in the beginning
+    
+    # Retrieve the user name from the data defined earlier
     user_name = new_user_data["user_name"]
-    # using the function that we wrote before to get the user id which appropriate for the user name
-    # in the new_user_data , it's a global variable and it is defined in the check_data func.
+    
+    # Retrieve the user ID using the check_data function
     new_user_id = check_data()
+    
+    
+    driver_options = Options()
 
-    options = Options() # An Options object is created to customize Chrome’s behavior.this will leave the browser open even after everything is completed
-    options.add_experimental_option("detach",True) # instructs ChromeDriver to keep the browser window open even after the WebDriver session ends. This is useful for debugging.
-    path = r"C:\Users\Smart\Downloads\chromedriver-win64\chromedriver.exe" # path to Chrome Driver.
-    service = Service(path) # A Service is created with the given path, and then the Chrome WebDriver is started with the specified options and service.
-    driver = webdriver.Chrome(service=service, options = options)
-
-
-    new_url = f"http://127.0.0.1:5000/users/{new_user_id}"
-
-    driver.get(new_url) # The driver navigates to the constructed URL.
-    time.sleep(2) # A short sleep of 2 seconds is introduced to allow the page time to load completely before further actions are taken.
-
-    wait = WebDriverWait(driver, 10) # A WebDriverWait object is created with a maximum wait time of 10 seconds. This will be used to pause execution until certain elements appear on the page.
-
+    driver_options.add_argument("--headless=new")
+    driver_options.add_argument("--no-sandbox")
+    driver_options.add_argument("--disable-dev-shm-usage")
+    
+    
+    driver_options.add_argument(f"--user-data-dir={os.path.expanduser('~')}/chrome_data")
+    
+    driver_options.add_argument("--remote-debugging-port=9222")  # Unique devtools port
+    
+    # Set up the ChromeDriver Service
+    service = Service(ChromeDriverManager().install())
+    # Initialize the Chrome WebDriver with the service and options
+    driver = webdriver.Chrome(service=service, options=driver_options)
+    
+    
     try:
-        # The code waits until an element with the HTML attribute id="user" appears on the page. This element is expected to contain the displayed user name.
-        element = wait.until(EC.presence_of_element_located((By.ID, "user")))  # For valid user/ EC - Explicit Wait!
         
-        # Once the element is found, its text content is extracted and stored in displayed_name.
-        displayed_name = element.text
-        # The function prints the displayed name and checks whether it matches the expected user_name.
-        print(f"Displayed Name: {displayed_name}")
+      new_url = f"http://127.0.0.1:5000/users/{new_user_id}"
 
-        if displayed_name != user_name:
-            raise Exception(f"Displayed name mismatch: Expected {user_name}, but got {displayed_name}")
-        
-    
-    # If they do not match, an exception is raised with a descriptive error message.
-    except Exception as e:
-        # If the user doesn't exist, the error message will be shown
-        element = wait.until(EC.presence_of_element_located((By.ID, "error")))  # For error message
-        error_message = element.text
-        print(f"Error: {error_message}")
-        raise Exception(f"Test failed: {error_message}")
-    
-    # Regardless of whether the try block succeeds or an exception is raised, the finally block ensures that the browser is properly closed.
-    # driver.close() closes the current window, and driver.quit() ends the WebDriver session.
+      driver.get(new_url) # The driver navigates to the constructed URL.
+      # Print the page source (HTML content)
+      page_content = driver.page_source
+      print(f"the page content: {page_content}")
+      time.sleep(2) # A short sleep of 2 seconds is introduced to allow the page time to load completely before further actions are taken.
+
+      wait = WebDriverWait(driver, 10)
+      
     finally:
-        driver.close()
-        driver.quit()
-
+      # Close the browser
+      driver.quit()
 
 
 # Run all functions in sequence

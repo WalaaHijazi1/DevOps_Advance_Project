@@ -1,7 +1,25 @@
 from flask import Flask, request, jsonify
 from db_connector import connect_data_table
+import logging
+
+import pymysql
+from contextlib import closing
+
+
+
+from werkzeug.exceptions import HTTPException
+
 
 app = Flask(__name__)
+app.debug = True
+
+
+# Set up logging
+file_handler = logging.FileHandler('error.log')
+file_handler.setLevel(logging.WARNING)
+app.logger.addHandler(file_handler)
+
+
 import datetime
 """
 POST – will accept user_name parameter inside the JSON payload.
@@ -44,7 +62,7 @@ def post_method():
             return jsonify({'status': 'ok', 'user_added': user_name}), 200
         else:
             return jsonify({'status': 'error', 'reason': 'missing parameters'}), 400
-    elif not user_name_exist:
+    else:
             return jsonify({'status': 'error', 'reason': 'user already exist'}), 500
 
 
@@ -61,15 +79,18 @@ def get_data(user_id):
     # if the request that was passed is a GET one:
     if request.method == 'GET':
         # first we will check if the user's data already exist.
-        global user_exist
-        user_exist = users_data(user_id)
-        if user_exist: # the function users_data will return True if it does exist and flase if it doesn't.
+        # global user_exist
+        # user_exist = users_data(user_id)
+        if users_data(user_id): # the function users_data will return True if it does exist and flase if it doesn't.
             # call the get_user_name func and get the name of the user.
             user_name = get_user_name_from_db(user_id)
+            if user_name:
+                return jsonify({'status': 'ok', 'user_name': user_name}), 200
+            else:
+                return jsonify({'status': 'error', 'reason': 'user name not found'}), 404
             # if the user name was found in the user_id, it will return the message below with the status: ok 
             # and the user name of the user id, with a status code of 200 that means the request was successful 
             # The requested resource has been fetched and transmitted to the message body.
-            return jsonify({'status': 'ok', 'user_name': user_name}), 200
         else:
             # if it hasn't fetched the data, it returs an error with a message that it hasn't find an id of the user name.
             # with a status code of 500 which the server encountered an unexpected condition that prevented it from fulfilling the request.
@@ -84,8 +105,18 @@ def get_data(user_id):
         {“user_name”: “george”}
         On success: return JSON : {“status”: “ok”, “user_updated”: <USER_NAME>} + code: 200
         On error: return JSON : {“status”: “error”, “reason”: ”no such id”} + code: 500
-        """
-        
+
+"""
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Pass through HTTP errors
+    if isinstance(e, HTTPException):
+        return e
+    # Handle non-HTTP exceptions
+    return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
     # if the request was a PUT one:
 def put_request(user_id, new_user_name):
     if request.method == 'PUT':
@@ -130,8 +161,10 @@ def delete_func(user_id):
 @app.route('/favicon.ico')
 def favicon():
     return '', 204  # No Content response
+
 # FUNCTIONS THAT I USED:
 # the following functions checks if user exist in the data base or not
+
 def users_data(user_id):
 
     conn, cursor = connect_data_table()
@@ -140,9 +173,7 @@ def users_data(user_id):
         return None
 
     # Read data
-    cursor.execute("SELECT "
-                   "users_id, user_name, creation_date "
-                   "FROM users")
+    cursor.execute("SELECT user_id, user_name, creation_date FROM users")
     # Fetch all the dat in the data base.
     rows = cursor.fetchall()
 
@@ -161,6 +192,8 @@ def users_data(user_id):
     return exist
 
 
+
+
 def add_user(user_name):
     # connect to the database in the cloud.
     # the try-except method in here because if there would be a connection error.
@@ -171,8 +204,8 @@ def add_user(user_name):
             return "Database connection failed"  # Handle connection failure
         
 
-        # Insert new user (assuming users_id is auto-generated)
-        cursor.execute("INSERT INTO users (user_name, creation_date) VALUES (?, GETDATE())", (user_name,))
+        # Insert new user (assuming user_id is auto-generated)
+        cursor.execute("INSERT INTO users (user_name, creation_date) VALUES (%s, CURRENT_TIMESTAMP)", (user_name,))
         conn.commit()
         return True # if user was added successfully
 
@@ -195,7 +228,7 @@ def check_user_name(user_name):
         conn, cursor = connect_data_table()
 
         # now, it checks if the user name exist, using sql langauge
-        cursor.execute("SELECT * FROM dbo.users WHERE user_name LIKE ?",(f"%{user_name}%",))
+        cursor.execute("SELECT * FROM users WHERE user_name LIKE %s",(f"%{user_name}%",))
         # fetching the user name from database
         user = cursor.fetchone()
         # the next line returns True if the user has a user name and false if it doesn't
@@ -219,8 +252,8 @@ def modify_name(user_id, user_name, new_user_name):
         conn, cursor = connect_data_table()
     
         # here I check the user name and user id exist together.
-        cursor.execute("SELECT * FROM dbo.users WHERE user_name = ? AND users_id = ?",(user_name,user_id))
-
+        cursor.execute("SELECT * FROM users WHERE user_name = %s AND user_id = %s",(user_name,user_id))
+        conn.commit()
 
         # here we fetch the result for db:
         result = cursor.fetchone()
@@ -230,10 +263,10 @@ def modify_name(user_id, user_name, new_user_name):
         
         if found_user: # if the user does really exist:
             # Update the user_name where user_id matches
-            cursor.execute("UPDATE users SET user_name = ? WHERE user_id = ?", (new_user_name, user_id))
+            cursor.execute("UPDATE users SET user_name = %s WHERE user_id = %s", (new_user_name, user_id))
             conn.commit()  # Save changes
 
-    except Exception as e:
+    except pymysql.MySQLError as e:
         print("Error: ", e)
         return False
     
@@ -249,25 +282,17 @@ def delete_name(user_id):
     try:
         # connect to the databse and it interacts with it:
         conn, cursor = connect_data_table()
-        if not cursor:
-            return False  # Connection failed
         
-        # using the func above to check if the user exist:
-        user_exist = users_data(user_id)
-
-        if not user_exist:
-            return False
-        elif user_exist:
-            # navigate to the table and specifically to the user id that was passed by the user and delete the user name and id:
-            cursor.execute("DELETE FROM users "
-                        "WHERE users_id = ?",
+        # navigate to the table and specifically to the user id that was passed by the user and delete the user name and id:
+        cursor.execute("DELETE FROM users "
+                        "WHERE user_id = %s",
                         (user_id,))
-            # printing how many rows were deleted (it suppose to be always 1)
-            print("Deleted", cursor.rowcount, "row(s) of data.")
-            conn.commit()
-            return True
+        # printing how many rows were deleted (it suppose to be always 1)
+        print("Deleted", cursor.rowcount, "row(s) of data.")
+        conn.commit()
+        return cursor.rowcount > 0
     
-    except Exception as e:
+    except pymysql.MySQLError as e:
         print("Error: ", e)
         return False
     
@@ -285,7 +310,7 @@ def get_user_name_from_db(id_num):
         conn, cursor = connect_data_table()
 
         # fetching the data from dbase and returning the user name with the specific id.
-        cursor.execute("SELECT user_name FROM dbo.users WHERE users_id = ?",(id_num,))
+        cursor.execute("SELECT user_name FROM users WHERE user_id = %s",(id_num,))
         user_name = cursor.fetchone()[0]
 
         return user_name
@@ -299,5 +324,6 @@ def get_user_name_from_db(id_num):
             conn.close()
 
 
+
 if __name__ == '__main__':
-    app.run( port=5000, debug=True)
+    app.run(host='0.0.0.0' , port =5000)
