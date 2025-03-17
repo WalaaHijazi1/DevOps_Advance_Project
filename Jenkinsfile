@@ -26,7 +26,7 @@ pipeline {
             steps {
                 script {
                     // Run the ChromeDriver container and bind its port to 127.0.0.1:5000
-                    sh 'docker run -d -p 127.0.0.1:5000:5000 walaahij/chromedriver:latest'
+                    sh 'docker run -d -p 127.0.0.1:5000:5005 walaahij/chromedriver:latest'
                 }
             }
         }
