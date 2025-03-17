@@ -91,6 +91,7 @@ pipeline {
 
         stage('Run combined_testing.py') {
             steps {
+		sh 'nohup python3 rest_app.py &'
                 sh 'docker exec chromedriver-container python3 /tests/combined_testing.py'
             }
         }
