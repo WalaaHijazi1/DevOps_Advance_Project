@@ -65,9 +65,9 @@ pipeline {
     	    steps {
         	script {
             	sh '''
-            	docker exec -d chromedriver-container bash -c 
-            	source .myenv/bin/activate &&
-            	nohup python3 rest_app.py &
+            	docker exec -d chromedriver-container bash -c "
+            	. .myenv/bin/activate &&
+            	nohup python3 rest_app.py & "
             '''
        		 }
    	 }
