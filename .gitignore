@@ -3,3 +3,4 @@ error.log
 google-chrome-stable_current_amd64.deb
 *.deb
 Dockerfile
+chromedriver
