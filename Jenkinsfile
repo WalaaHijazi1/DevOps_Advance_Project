@@ -43,18 +43,18 @@ pipeline {
     	    steps {
         	sh '''
         	# Check if the /tests_repo directory exists inside the container
-        	docker exec chromedriver-container bash -c "if [ -d /tests_repo ]; then echo 'Directory exists. Removing and cloning the repository.'; rm -rf /tests_repo; fi"
+        	docker exec chromedriver bash -c "if [ -d /tests_repo ]; then echo 'Directory exists. Removing and cloning the repository.'; rm -rf /tests_repo; fi"
         
         	# Cloning the repository
-        	docker exec chromedriver-container git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
+        	docker exec chromedriver git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
 
         	# Remove any existing test files in /tests to ensure overwriting
-        	docker exec chromedriver-container rm -f /tests/frontend_testing.py
-        	docker exec chromedriver-container rm -f /tests/combined_testing.py
+        	docker exec chromedriver rm -f /tests/frontend_testing.py
+        	docker exec chromedriver rm -f /tests/combined_testing.py
 
         	# Copy the new test files into the /tests directory
-        	docker exec chromedriver-container cp /tests_repo/frontend_testing.py /tests/
-       		docker exec chromedriver-container cp /tests_repo/combined_testing.py /tests/
+        	docker exec chromedriver cp /tests_repo/frontend_testing.py /tests/
+       	docker exec chromedriver cp /tests_repo/combined_testing.py /tests/
        		 '''
    		 }
 	}
@@ -63,7 +63,7 @@ pipeline {
             steps {
                 sh '''
                 # Install requirements inside the container from the cloned repo
-                docker exec chromedriver-container pip install --no-cache-dir --upgrade -r /tests_repo/requirements.txt
+                docker exec chromedriver pip install --no-cache-dir --upgrade -r /tests_repo/requirements.txt
                 '''
             }
         }
@@ -71,7 +71,7 @@ pipeline {
         stage('Run rest_app.py') {
     	steps {
 	        sh '''
-        	docker exec chromedriver-container bash -c "
+        	docker exec chromedriver bash -c "
         		cd /tests_repo && . .myenv/bin/activate && nohup python3 rest_app.py &"
         '''
     		}
@@ -96,13 +96,13 @@ pipeline {
 
         stage('Run combined_testing.py') {
             steps {
-                sh 'docker exec chromedriver-container python3 /tests/combined_testing.py'
+                sh 'docker exec chromedriver python3 /tests/combined_testing.py'
             }
         }
 
         stage('Run frontend_testing.py') {
             steps {
-                sh 'docker exec chromedriver-container python3 /tests/frontend_testing.py'
+                sh 'docker exec chromedriver python3 /tests/frontend_testing.py'
             }
         }
 
