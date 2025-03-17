@@ -35,6 +35,7 @@ pipeline{
             steps{
                 sh'''
                 . .myenv/bin/activate
+		chmod +x ./chromedriver
                 python3 frontend_testing.py
                 '''
            }
@@ -43,6 +44,7 @@ pipeline{
             steps{
                 sh'''
                 . .myenv/bin/activate
+		chmod +x ./chromedriver
                 python3 combined_testing.py
                 '''
            }
