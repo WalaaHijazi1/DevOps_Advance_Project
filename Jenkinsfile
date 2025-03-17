@@ -21,15 +21,23 @@ pipeline {
                 }
             }
         }
+       stage('Run ChromeDriver Container') {
+    	steps {
+        	    script {
+            		sh '''
+            		# Check if the container already exists
+            		if [ $(docker ps -aq -f name=chromedriver) ]; then
+                	    echo "Container exists. Restarting it..."
+                	    docker start chromedriver
+            		else
+                	    echo "Container does not exist. Creating a new one..."
+                	    docker run -d --name chromedriver -p 0.0.0.0:5000:5000 walaahij/chromedriver:latest
+            		fi
+            		'''
+        		}
+    	        }
+	}
 
-        stage('Run ChromeDriver Container') {
-            steps {
-                script {
-                    // Run the ChromeDriver container and bind its port to 127.0.0.1:5000
-                    sh 'docker run -d -p 0.0.0.0:5000:5000 walaahij/chromedriver:latest'
-                }
-            }
-        }
         stage('Clone or Update Tests from GitHub') {
     	    steps {
         	sh '''
