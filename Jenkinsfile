@@ -19,7 +19,7 @@ pipeline{
             steps{
                 sh'''
                 . .myenv/bin/activate
-                python3 web_app.py
+                nohup python3 web_app.py &
                 '''
            }
         }
