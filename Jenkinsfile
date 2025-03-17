@@ -28,8 +28,8 @@ pipeline{
             }
         }
 	stage('Clone or Update Tests from GitHub') {
-    		steps {
-        		sh '''
+    	    steps {
+        	sh '''
         	# Check if the /tests_repo directory exists
         	if [ -d "/tests_repo" ]; then
             	echo "Directory /tests_repo already exists. Pulling the latest changes."
@@ -48,7 +48,7 @@ pipeline{
         	# Copy the new test files into the /tests directory
         	docker exec chromedriver-container cp /tests_repo/frontend_testing.py /tests/
         	docker exec chromedriver-container cp /tests_repo/combined_testing.py /tests/
-        '''
+        	'''
     		}
 	}	
 	stage('Install Dependencies') {
