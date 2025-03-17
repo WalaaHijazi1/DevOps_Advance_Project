@@ -14,7 +14,7 @@ pipeline{
             steps {
                 script {
                     // Pull the Docker image from the private registry
-                    sh 'docker login -u $DOCKER_CREDENTIALS_USR -p $DOCKER_CREDENTIALS_PSW private-registry-url'
+                    sh '    echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin'
                     sh 'docker pull docker.io/walaahij/chromedriver:latest'
                 }
             }
