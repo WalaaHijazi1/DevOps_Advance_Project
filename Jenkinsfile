@@ -1,16 +1,19 @@
-pipeline{
-        agent any
-   environment {
+pipeline {
+    agent any
+
+    environment {
         DOCKER_CREDENTIALS = credentials('docker-username')
     }
-   stages{
-         stage('Clone Repository') {
+
+    stages {
+        stage('Clone Repository') {
             steps {
-                // github-pat: is the ID of my github Credentials in Jenkins.
+                // github-pat: is the ID of my GitHub Credentials in Jenkins.
                 git credentialsId: 'github-pat', url: 'https://github.com/WalaaHijazi1/DevOps_Advance_Project.git', branch: 'main'
             }
         }
-         stage('Pull ChromeDriver Image') {
+
+        stage('Pull ChromeDriver Image') {
             steps {
                 script {
                     // Pull the Docker image from the private registry
@@ -19,6 +22,7 @@ pipeline{
                 }
             }
         }
+
         stage('Run ChromeDriver Container') {
             steps {
                 script {
@@ -27,18 +31,19 @@ pipeline{
                 }
             }
         }
+
         stage('Clone or Update Tests from GitHub') {
             steps {
                 sh '''
                 # Check if the /tests_repo directory exists
                 if [ -d "/tests_repo" ]; then
-                echo "Directory /tests_repo already exists. Pulling the latest changes."
-                # If the directory exists, pull the latest changes
-                docker exec chromedriver-container git -C /tests_repo pull
+                    echo "Directory /tests_repo already exists. Pulling the latest changes."
+                    # If the directory exists, pull the latest changes
+                    docker exec chromedriver-container git -C /tests_repo pull
                 else
-                echo "Directory /tests_repo does not exist. Cloning the repository."
-                # If the directory doesn't exist, clone the repository
-                docker exec chromedriver-container git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
+                    echo "Directory /tests_repo does not exist. Cloning the repository."
+                    # If the directory doesn't exist, clone the repository
+                    docker exec chromedriver-container git clone -b main https://github.com/WalaaHijazi1/DevOps_Advance_Project.git /tests_repo
                 fi
 
                 # Remove any existing test files in /tests to ensure overwriting
@@ -49,8 +54,9 @@ pipeline{
                 docker exec chromedriver-container cp /tests_repo/frontend_testing.py /tests/
                 docker exec chromedriver-container cp /tests_repo/combined_testing.py /tests/
                 '''
-                }
+            }
         }
+
         stage('Install Dependencies') {
             steps {
                 sh '''
@@ -59,39 +65,44 @@ pipeline{
                 '''
             }
         }
-          stage('Run rest_app.py') {
-             steps {
+
+        stage('Run rest_app.py') {
+            steps {
                 sh '''
-        . .myenv/bin/activate
-        nohup python3 rest_app.py &
-        '''
-                }
+                . .myenv/bin/activate
+                nohup python3 rest_app.py &
+                '''
+            }
         }
-        stage('Run Web_app.py'){
-            steps{
-                sh'''
+
+        stage('Run web_app.py') {
+            steps {
+                sh '''
                 . .myenv/bin/activate
                 nohup python3 web_app.py &
                 '''
-           }
+            }
         }
-        stage('Run backend_testing.py'){
-            steps{
-                sh'''
+
+        stage('Run backend_testing.py') {
+            steps {
+                sh '''
                 . .myenv/bin/activate
                 python3 backend_testing.py
                 '''
-           }
+            }
         }
-        stage('Run frontend_testing.py'){
-            steps{
-                 sh 'docker exec chromedriver-container python3 /tests/frontend_testing.py'
-           }
+
+        stage('Run frontend_testing.py') {
+            steps {
+                sh 'docker exec chromedriver-container python3 /tests/frontend_testing.py'
+            }
         }
-        stage('Run combined_testing.py'){
-            steps{
-                 sh 'docker exec chromedriver-container python3 /tests/combined_testing.py'
-           }
+
+        stage('Run combined_testing.py') {
+            steps {
+                sh 'docker exec chromedriver-container python3 /tests/combined_testing.py'
+            }
         }
-}
+    }
 }
