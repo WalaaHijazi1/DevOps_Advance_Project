@@ -20,21 +20,39 @@ import requests
 
 # Specify the path to ChromeDriver
 #service = Service('./chromedriver')
-service = Service('/usr/local/bin/chromedriver')
+#service = Service('/usr/local/bin/chromedriver')
 
 # Set Chrome options
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Run in headless mode
-chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
-chrome_options.add_argument("--no-sandbox")  # Disable sandboxing
-chrome_options.add_argument("--disable-dev-shm-usage")  # Disable shared memory usage
+#chrome_options = Options()
+#chrome_options.add_argument("--headless")  # Run in headless mode
+#chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
+#chrome_options.add_argument("--no-sandbox")  # Disable sandboxing
+#chrome_options.add_argument("--disable-dev-shm-usage")  # Disable shared memory usage
 
 # Create a unique user data directory
-user_data_dir = os.path.join(tempfile.mkdtemp(), 'chrome-profile')
-chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
+#user_data_dir = os.path.join(tempfile.mkdtemp(), 'chrome-profile')
+#chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
 
 # Start WebDriver
-driver = webdriver.Chrome(service=service, options=chrome_options)
+#driver = webdriver.Chrome(service=service, options=chrome_options)
+
+driver_options = Options()
+
+driver_options.add_argument("--headless=new")
+driver_options.add_argument("--no-sandbox")
+driver_options.add_argument("--disable-dev-shm-usage")
+    
+    
+driver_options.add_argument(f"--user-data-dir={os.path.expanduser('~')}/chrome_data")
+    
+driver_options.add_argument("--remote-debugging-port=9222")  # Unique devtools port
+    
+# Set up the ChromeDriver Service
+service = Service(ChromeDriverManager().install())
+# Initialize the Chrome WebDriver with the service and options
+driver = webdriver.Chrome(service=service, options=driver_options)
+
+
 
 # Define the URL to test
 user_id = 1
