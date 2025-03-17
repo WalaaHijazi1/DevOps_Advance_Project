@@ -61,16 +61,17 @@ pipeline {
             }
         }
 
-        stage('Run rest_app.py') {
-            steps {
-                sh '''
-                . .myenv/bin/activate
-                nohup python3 rest_app.py > rest_app.log 2>&1 &
-		#nohup python3 rest_app.py &
-                '''
-            }
-        }
-
+	stage('Run rest_app.py') {
+    	    steps {
+        	script {
+            	sh '''
+            	docker exec -d chromedriver-container bash -c 
+            	source .myenv/bin/activate &&
+            	nohup python3 /tests_repo/rest_app.py > /tests_repo/rest_app.log 2>&1 &
+            '''
+       		 }
+   	 }
+	}
         stage('Run web_app.py') {
             steps {
                 sh '''
@@ -91,7 +92,6 @@ pipeline {
 
         stage('Run combined_testing.py') {
             steps {
-		sh 'nohup python3 rest_app.py &'
                 sh 'docker exec chromedriver-container python3 /tests/combined_testing.py'
             }
         }
