@@ -5,7 +5,7 @@ pipeline {
         DOCKER_CREDENTIALS = credentials('docker-username')
     }
 
-    stages {
+   stages {
         stage('Clone Repository') {
             steps {
                 // GitHub credentials for repository cloning
@@ -74,16 +74,16 @@ pipeline {
             }
         }
 
-        stage('Run rest_app.py') {
-            steps {
-                sh '''
-                    . .myenv/bin/activate
-                    nohup python3 rest_app.py &  # Start rest_app.py in the background
-                    # Wait for the service to be available (optional)
-                    sleep 5  # You might adjust this time or replace it with a more robust wait check
-                '''
-            }
-        }
+        //stage('Run rest_app.py') {
+            //steps {
+                //sh '''
+                   // . .myenv/bin/activate
+                    //nohup python3 rest_app.py &  # Start rest_app.py in the background
+                   // # Wait for the service to be available (optional)
+                    //sleep 5  # You might adjust this time or replace it with a more robust wait check
+                //'''
+            //}
+        //}
         stage('Run rest_app.py') {
             steps {
                 sh '''
