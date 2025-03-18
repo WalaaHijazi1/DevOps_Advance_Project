@@ -26,14 +26,15 @@ pipeline {
     	steps {
         		script {
             		sh '''
-            		# Check if the container already exists
-            		if [ $(docker ps -aq -f name=chromedriver) ]; then
-                	     echo "Container exists. Restarting it..."
-                	     docker start chromedriver
-            		else
-                	     echo "Container does not exist. Creating a new one..."
-                	     docker run -d --name chromedriver -p 127.0.0.1:5000:5005 walaahij/chromedriver:latest
-            		fi
+		if [ $(docker ps -q -f name=chromedriver) ]; then
+    			echo "Container is already running."
+		elif [ $(docker ps -aq -f name=chromedriver) ]; then
+    			echo "Container exists but is stopped. Restarting it..."
+    			docker start chromedriver 
+		else
+    			echo "Container does not exist. Creating a new one..."
+    			docker run -d --name chromedriver -p 127.0.0.1:5000:5005 walaahij/chromedriver:latest
+		fi
             		'''
        		 }
     	         }
