@@ -76,17 +76,15 @@ pipeline {
         }
 
         stage('Run rest_app.py') {
-    	steps {
-	//        sh '''
-        //	docker exec chromedriver bash -c "
-        //	 cd /tests_repo && . .myenv/bin/activate && nohup python3 rest_app.py &"
-       //'''
-              sh '''
+            steps {
+                sh '''
                 . .myenv/bin/activate
-                nohup python3 rest_app.py &
+                nohup python3 rest_app.py &  # Start rest_app.py in the background
+                sleep 5  # Ensure rest_app.py has time to start
                 '''
-    		}
-	}
+            }
+        }
+
         stage('Run web_app.py') {
             steps {
                 sh '''
