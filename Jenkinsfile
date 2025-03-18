@@ -83,7 +83,7 @@ pipeline {
        //'''
               sh '''
                 . .myenv/bin/activate
-                nohup python3 web_app.py &
+                nohup python3 rest_app.py &
                 '''
     		}
 	}
