@@ -49,7 +49,12 @@ driver_options.add_argument(f"--user-data-dir={os.path.expanduser('~')}/chrome_d
 driver_options.add_argument("--remote-debugging-port=9222")  # Unique devtools port
     
 # Set up the ChromeDriver Service
-service = Service(ChromeDriverManager().install())
+#service = Service(ChromeDriverManager().install())
+
+# Set up the ChromeDriver Service
+chromedriver_path = "/root/.wdm/drivers/chromedriver/linux64/134.0.6998.88/chromedriver-linux64/chromedriver"
+service = Service(executable_path=chromedriver_path)
+
 # Initialize the Chrome WebDriver with the service and options
 driver = webdriver.Chrome(service=service, options=driver_options)
 
