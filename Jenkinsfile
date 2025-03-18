@@ -84,16 +84,28 @@ pipeline {
                 '''
             }
         }
-
-        stage('Run web_app.py') {
+        stage('Run rest_app.py') {
             steps {
                 sh '''
-                    . .myenv/bin/activate
-                    nohup python3 web_app.py &
-                '''
-            }
-        }
-
+            	      . .myenv/bin/activate
+            	      nohup python3 rest_app.py &  # Start rest_app.py in the background
+            
+             	     # Wait for the backend service to be available (check every 2 seconds for up to 30 seconds)
+            	     counter=0
+            	     while ! curl -s 127.0.0.1:5000 > /dev/null && [ $counter -lt 15 ]; do
+                	echo "Waiting for backend to be available..."
+                	sleep 2
+                	counter=$((counter + 1))
+                   done
+            
+            	     if [ $counter -eq 15 ]; then
+                	echo "Backend did not start in time."
+                	exit 1
+            	     fi
+                    echo "Backend is up and running."
+        	'''
+    	}
+         }
         stage('Run backend_testing.py') {
             steps {
                 sh '''
