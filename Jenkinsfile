@@ -13,12 +13,18 @@ pipeline {
             }
         }
         stage('Pull ChromeDriver Image') {
-            		steps {
-                	script {
-                    // Pull the Docker image from the private registry
-                    sh 'echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin'
-                    sh 'docker pull docker.io/walaahij/chromedriver:latest'
-                }
+            	steps {
+	         script {
+    		def imageExists = sh(script: "docker images -q walaahij/chromedriver:latest", returnStdout: true).trim()
+   		 if (imageExists) {
+        		        echo "Image already exists. Skipping pull."
+    		 } else {
+        		       echo "Image not found. Pulling from Docker Hub..."
+        		       sh 'echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin'
+        		       sh 'docker pull docker.io/walaahij/chromedriver:latest'
+     		}
+	       }
+
             }
         }
 
