@@ -88,7 +88,7 @@ pipeline {
             steps {
                 sh '''
             	      . .myenv/bin/activate
-            	      nohup python3 /tests/rest_app.py &  # Start rest_app.py in the background
+            	      nohup python3 /rest_app.py &  # Start rest_app.py in the background
             
              	     # Wait for the backend service to be available (check every 2 seconds for up to 30 seconds)
             	     counter=0
