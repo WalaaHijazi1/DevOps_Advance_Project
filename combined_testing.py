@@ -1,4 +1,4 @@
-ss"""
+"""
 Combined testing – for Web interface, REST API and Database testing
 (module name = combined_testing.py):
 The script will:
