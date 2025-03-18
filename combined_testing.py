@@ -34,7 +34,7 @@ import tempfile
 
 #url = "http://127.0.0.1:5000/users"
 
-url = "lhttp://172.17.0.1:5000/users"
+url = "http://172.17.0.1:5000/users"
 
 # the post function is explained in the backend testing, this one is not very different from the one in the backend test.
 # if you want to understand the steps in here please go back to the function in the backend testing file.
